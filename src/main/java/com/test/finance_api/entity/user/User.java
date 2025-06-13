@@ -1,13 +1,11 @@
 package com.test.finance_api.entity.user;
 
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+@Entity
 @Table(name = "tb_users", schema = "first_application")
 @Data
 @AllArgsConstructor
