@@ -1,18 +1,15 @@
-FROM maven:3.9.7-amazoncorretto-21 AS build
-
-COPY src /app/src
-COPY pom.xml /app
+FROM maven:3.9-eclipse-temurin-21 AS build
 
 WORKDIR /app
 
-RUN mvn clean install
+COPY . .
 
-FROM amazoncorretto:21-alpine-jdk
+RUN mvn clean package -DskipTests
 
-COPY --from=build /app/target/agenda-0.0.1-SNAPSHOT.jar /app/app.jar
+FROM eclipse-temurin:21-jre-jammy
 
 WORKDIR /app
 
-EXPOSE 8080
+COPY --from=build /app/target/finance-0.0.1-SNAPSHOT.jar app.jar
 
-CMD ["java", "-jar", "app.jar"]
+ENTRYPOINT ["java", "-jar", "app.jar"]
