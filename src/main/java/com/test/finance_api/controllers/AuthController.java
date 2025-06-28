@@ -1,10 +1,12 @@
 package com.test.finance_api.controllers;
 
-import com.test.finance_api.dto.LoginRequestDTO;
-import com.test.finance_api.dto.LoginResponseDTO;
-import com.test.finance_api.dto.RegisterRequestDTO;
-import com.test.finance_api.dto.UserDTO;
-import com.test.finance_api.entity.user.User;
+import com.test.finance_api.dto.auth.LoginRequestDTO;
+import com.test.finance_api.dto.auth.LoginResponseDTO;
+import com.test.finance_api.dto.auth.RegisterRequestDTO;
+import com.test.finance_api.dto.auth.UserDTO;
+import com.test.finance_api.entity.User;
+import com.test.finance_api.exceptions.EmailAlreadyExistsException;
+import com.test.finance_api.exceptions.InvalidAccessException;
 import com.test.finance_api.infra.security.TokenService;
 import com.test.finance_api.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -26,34 +28,34 @@ public class AuthController {
     private final TokenService tokenService;
 
     @PostMapping("/login")
-    public ResponseEntity login(@RequestBody LoginRequestDTO body)  {
-        User user = this.userRepository.findByEmail(body.email()).orElseThrow(() -> new RuntimeException("User not found"));
+    public ResponseEntity<LoginResponseDTO> login(@RequestBody LoginRequestDTO body)  {
+        User user = this.userRepository.findByEmail(body.email()).orElseThrow(InvalidAccessException::new);
 
         if(passwordEncoder.matches(body.password(), user.getPassword())) {
             String token = tokenService.generateToken(user);
 
             return ResponseEntity.ok(new LoginResponseDTO(token, new UserDTO(user.getName(), user.getEmail())));
         }
-        return ResponseEntity.badRequest().build();
+        throw new InvalidAccessException();
     }
 
     @PostMapping("/register")
-    public ResponseEntity register(@RequestBody RegisterRequestDTO body)  {
-        Optional<User> user = this.userRepository.findByEmail(body.email());
+    public ResponseEntity<LoginResponseDTO> register(@RequestBody RegisterRequestDTO body)  {
+        Optional<User> existingUser = this.userRepository.findByEmail(body.email());
 
-        if(user.isEmpty()) {
-            User newUser = new User();
-            newUser.setName(body.username());
-            newUser.setEmail(body.email());
-            newUser.setPassword(passwordEncoder.encode(body.password()));
-
-            this.userRepository.save(newUser);
-
-            String token = tokenService.generateToken(newUser);
-
-            return ResponseEntity.ok(new LoginResponseDTO(token, new UserDTO(newUser.getName(), newUser.getEmail())));
+        if (existingUser.isPresent()) {
+            throw new EmailAlreadyExistsException();
         }
 
-        return ResponseEntity.badRequest().build();
+        User newUser = new User();
+        newUser.setName(body.username());
+        newUser.setEmail(body.email());
+        newUser.setPassword(passwordEncoder.encode(body.password()));
+
+        this.userRepository.save(newUser);
+
+        String token = tokenService.generateToken(newUser);
+
+        return ResponseEntity.ok(new LoginResponseDTO(token, new UserDTO(newUser.getName(), newUser.getEmail())));
     }
 }

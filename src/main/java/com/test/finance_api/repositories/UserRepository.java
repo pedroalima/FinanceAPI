@@ -1,6 +1,6 @@
 package com.test.finance_api.repositories;
 
-import com.test.finance_api.entity.user.User;
+import com.test.finance_api.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
