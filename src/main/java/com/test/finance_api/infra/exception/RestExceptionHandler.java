@@ -3,14 +3,33 @@ package com.test.finance_api.infra.exception;
 import com.test.finance_api.exceptions.EmailAlreadyExistsException;
 import com.test.finance_api.exceptions.EmailNotFoundException;
 import com.test.finance_api.exceptions.InvalidAccessException;
+import com.test.finance_api.exceptions.UserNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @ControllerAdvice
 public class RestExceptionHandler extends ResponseEntityExceptionHandler {
+    @Override
+    protected ResponseEntity<Object> handleMethodArgumentNotValid(
+            org.springframework.web.bind.MethodArgumentNotValidException ex,
+            org.springframework.http.HttpHeaders headers,
+            org.springframework.http.HttpStatusCode status,
+            org.springframework.web.context.request.WebRequest request) {
+
+        Map<String, String> errors = new HashMap<>();
+        for (org.springframework.validation.FieldError error : ex.getBindingResult().getFieldErrors()) {
+            errors.put(error.getField(), error.getDefaultMessage());
+        }
+
+        RestErrorMessage errorMessage = new RestErrorMessage(org.springframework.http.HttpStatus.BAD_REQUEST, errors);
+        return ResponseEntity.status(org.springframework.http.HttpStatus.BAD_REQUEST).body(errorMessage);
+    }
 
     @ExceptionHandler(EmailAlreadyExistsException.class)
     private ResponseEntity<RestErrorMessage> emailAlreadyExistsHandler(EmailAlreadyExistsException exception) {
@@ -38,5 +57,12 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
         RestErrorMessage errorMessage = new RestErrorMessage(HttpStatus.INTERNAL_SERVER_ERROR, exception.getMessage());
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorMessage);
+    }
+
+    @ExceptionHandler(UserNotFoundException.class)
+    private ResponseEntity<RestErrorMessage> userNotFoundHandler(UserNotFoundException exception) {
+        RestErrorMessage errorMessage = new RestErrorMessage(HttpStatus.BAD_REQUEST, exception.getMessage());
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorMessage);
     }
 }

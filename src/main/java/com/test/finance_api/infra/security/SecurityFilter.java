@@ -1,6 +1,6 @@
 package com.test.finance_api.infra.security;
 
-import com.test.finance_api.entity.user.User;
+import com.test.finance_api.entity.User;
 import com.test.finance_api.repositories.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

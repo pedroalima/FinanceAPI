@@ -5,54 +5,24 @@ import com.test.finance_api.dto.transaction.TransactionRequestDTO;
 import com.test.finance_api.dto.transaction.TransactionResponseDTO;
 import com.test.finance_api.entity.Transaction;
 import com.test.finance_api.repositories.TransactionRepository;
+import com.test.finance_api.services.TransactionService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 
-@RestController()
+@RestController
 @RequestMapping("/transaction")
 public class TransactionController {
-    private final TransactionRepository _transactionRepository;
+    private final TransactionService _transactionService;
 
-    public TransactionController(TransactionRepository transactionRepository) {
-        this._transactionRepository = transactionRepository;
+    public TransactionController(TransactionService transactionService) {
+        this._transactionService = transactionService;
     }
 
-    @PutMapping("/create")
-    public ResponseEntity<TransactionResponseDTO> create(@RequestBody TransactionRequestDTO body) {
-
-        Transaction newTransaction = new Transaction();
-
-        newTransaction.setUser(body.user());
-        newTransaction.setAmount(body.amount());
-        newTransaction.setDate(body.date());
-        newTransaction.setDescription(body.description());
-        newTransaction.setType(body.type());
-        newTransaction.setCategory(body.category());
-        newTransaction.setAccount(body.account());
-        newTransaction.setInstallment(body.installment());
-        newTransaction.setInstallmentValue(body.installmentValue());
-
-        this._transactionRepository.save(newTransaction);
-
-        return ResponseEntity.ok(new TransactionResponseDTO(
-                "Transação criada com sucesso!", new TransactionDTO(
-                newTransaction.getId(),
-                newTransaction.getUser().getId(),
-                newTransaction.getAmount(),
-                newTransaction.getDate(),
-                newTransaction.getDescription(),
-                newTransaction.getType(),
-                newTransaction.getCategory(),
-                newTransaction.getAccount(),
-                newTransaction.getInstallment(),
-                newTransaction.getInstallmentValue(),
-                newTransaction.getCreatedAt(),
-                newTransaction.getUpdatedAt()
-        )));
+    @PostMapping("/create")
+    public ResponseEntity<TransactionResponseDTO> create(@RequestBody @Valid TransactionRequestDTO body) {
+        return this._transactionService.create(body);
     }
 }
