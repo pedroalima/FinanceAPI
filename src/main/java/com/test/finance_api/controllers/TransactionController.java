@@ -1,10 +1,7 @@
 package com.test.finance_api.controllers;
 
-import com.test.finance_api.dto.transaction.TransactionDTO;
 import com.test.finance_api.dto.transaction.TransactionRequestDTO;
 import com.test.finance_api.dto.transaction.TransactionResponseDTO;
-import com.test.finance_api.entity.Transaction;
-import com.test.finance_api.repositories.TransactionRepository;
 import com.test.finance_api.services.TransactionService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;

@@ -17,13 +17,13 @@ import java.util.Map;
 public class RestExceptionHandler extends ResponseEntityExceptionHandler {
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(
-            org.springframework.web.bind.MethodArgumentNotValidException ex,
+            org.springframework.web.bind.MethodArgumentNotValidException exception,
             org.springframework.http.HttpHeaders headers,
             org.springframework.http.HttpStatusCode status,
             org.springframework.web.context.request.WebRequest request) {
 
         Map<String, String> errors = new HashMap<>();
-        for (org.springframework.validation.FieldError error : ex.getBindingResult().getFieldErrors()) {
+        for (org.springframework.validation.FieldError error : exception.getBindingResult().getFieldErrors()) {
             errors.put(error.getField(), error.getDefaultMessage());
         }
 
@@ -32,35 +32,35 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     @ExceptionHandler(EmailAlreadyExistsException.class)
-    private ResponseEntity<RestErrorMessage> emailAlreadyExistsHandler(EmailAlreadyExistsException exception) {
+    private ResponseEntity<RestErrorMessage> handlerEmailAlreadyExists(EmailAlreadyExistsException exception) {
         RestErrorMessage errorMessage = new RestErrorMessage(HttpStatus.CONFLICT, exception.getMessage());
 
         return ResponseEntity.status(HttpStatus.CONFLICT).body(errorMessage);
     }
 
     @ExceptionHandler(EmailNotFoundException.class)
-    private ResponseEntity<RestErrorMessage> emailNotFoundHandler(EmailNotFoundException exception) {
+    private ResponseEntity<RestErrorMessage> handlerEmailNotFound(EmailNotFoundException exception) {
         RestErrorMessage errorMessage = new RestErrorMessage(HttpStatus.NOT_FOUND, exception.getMessage());
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorMessage);
     }
 
     @ExceptionHandler(InvalidAccessException.class)
-    private ResponseEntity<RestErrorMessage> invalidAccessHandler(InvalidAccessException exception) {
+    private ResponseEntity<RestErrorMessage> handlerInvalidAccess(InvalidAccessException exception) {
         RestErrorMessage errorMessage = new RestErrorMessage(HttpStatus.FORBIDDEN, exception.getMessage());
 
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMessage);
     }
 
     @ExceptionHandler(RuntimeException.class)
-    private ResponseEntity<RestErrorMessage> runtimeErrorHandler(RuntimeException exception) {
+    private ResponseEntity<RestErrorMessage> handlerRuntimeError(RuntimeException exception) {
         RestErrorMessage errorMessage = new RestErrorMessage(HttpStatus.INTERNAL_SERVER_ERROR, exception.getMessage());
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorMessage);
     }
 
     @ExceptionHandler(UserNotFoundException.class)
-    private ResponseEntity<RestErrorMessage> userNotFoundHandler(UserNotFoundException exception) {
+    private ResponseEntity<RestErrorMessage> handlerUserNotFound(UserNotFoundException exception) {
         RestErrorMessage errorMessage = new RestErrorMessage(HttpStatus.BAD_REQUEST, exception.getMessage());
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorMessage);

@@ -1,5 +1,6 @@
 package com.test.finance_api.infra.security;
 
+import com.test.finance_api.infra.exception.CustomAuthenticationEntryPoint;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,6 +28,9 @@ public class SecurityConfig {
     private CustomUserDetailsService userDetailsService;
 
     @Autowired
+    private CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+
+    @Autowired
     SecurityFilter securityFilter;
 
     @Bean
@@ -40,7 +44,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/auth/register").permitAll()
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
+                .exceptionHandling(exception -> exception
+                    .authenticationEntryPoint(customAuthenticationEntryPoint)
+                );
         return http.build();
     }
 
