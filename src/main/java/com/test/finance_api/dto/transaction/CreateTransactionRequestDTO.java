@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDateTime;
 
-public record TransactionRequestDTO(
+public record CreateTransactionRequestDTO(
         @NotBlank(message = "UserId não pode ser vazio")
         @NotNull(message = "UserId não pode ser nulo")
         String userId,
