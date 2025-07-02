@@ -25,22 +25,51 @@ public class TransactionService {
         this._transactionMapper = transactionMapper;
     }
 
-    public ResponseEntity<GetAllTransactionsResponseDTO> getAllByUserId(@PathVariable(value = "userId") String userId) {
-        this._userRepository.findById(userId).orElseThrow(() -> new UserNotFoundException("UserId: " + userId + " não encontrado"));
+    public ResponseEntity<TransactionResponseDTO> getAllByUserId(@PathVariable(value = "userId") String userId) {
+        this._userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("UserId: " + userId + " não encontrado"));
 
         List<Transaction> transactionList = this._transactionRepository.findAllByUserId(userId);
 
         TransactionDTO[] transactionListDTO = this._transactionMapper.transactionListToTransactionListDTO(transactionList);
 
         if (transactionListDTO.length == 0) {
-            return ResponseEntity.ok(new GetAllTransactionsResponseDTO("Nenhuma transação encontrada para o usuário", new TransactionDTO[0]));
+            return ResponseEntity.ok(new TransactionResponseDTO(
+                    "Nenhuma transação encontrada para o usuário",
+                    null,
+                    new TransactionDTO[0]
+            ));
         }
 
-        return ResponseEntity.ok(new GetAllTransactionsResponseDTO("Todas as transações do usuário", transactionListDTO));
+        return ResponseEntity.ok(new TransactionResponseDTO(
+                        "Todas as transações do usuário",
+                        null,
+                        transactionListDTO
+        ));
     }
 
-    public ResponseEntity<CreateTransactionResponseDTO> create(@RequestBody CreateTransactionRequestDTO body) {
-        this._userRepository.findById(body.userId()).orElseThrow(() -> new UserNotFoundException("UserId: " + body.userId() + " não encontrado"));
+    public ResponseEntity<TransactionResponseDTO> getById(
+            @PathVariable(value = "userId") String userId,
+            @PathVariable(value = "transactionId") String transactionId
+    ) {
+        this._userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("UserId: " + userId + " não encontrado"));
+
+        Transaction transaction = this._transactionRepository.findById(transactionId)
+                .orElseThrow(() -> new UserNotFoundException("TransactionId: " + transactionId + " não encontrado"));
+
+        TransactionDTO transactionDTO = this._transactionMapper.transactionToTransactionDTO(transaction);
+
+        return ResponseEntity.ok(new TransactionResponseDTO(
+                "Transação encontrada com sucesso!",
+                transactionDTO,
+                null
+        ));
+    }
+
+    public ResponseEntity<TransactionResponseDTO> create(@RequestBody CreateTransactionRequestDTO body) {
+        this._userRepository.findById(body.userId())
+                .orElseThrow(() -> new UserNotFoundException("UserId: " + body.userId() + " não encontrado"));
 
         Transaction newTransaction = this._transactionMapper.transactionRequestDTOToTransaction(body);
 
@@ -52,6 +81,10 @@ public class TransactionService {
 
         TransactionDTO transactionDTO = this._transactionMapper.transactionToTransactionDTO(newTransaction);
 
-        return ResponseEntity.ok(new CreateTransactionResponseDTO("Transação criada com sucesso!", transactionDTO));
+        return ResponseEntity.ok(new TransactionResponseDTO(
+                "Transação criada com sucesso!",
+                transactionDTO,
+                null
+        ));
     }
 }
