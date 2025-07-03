@@ -1,4 +1,3 @@
 package com.test.finance_api.dto.auth;
 
-public record LoginResponseDTO(String access_token, UserDTO user) {
-}
+public record LoginResponseDTO(String message, String access_token, UserDTO user) {}

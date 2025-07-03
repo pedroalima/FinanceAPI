@@ -29,12 +29,17 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponseDTO> login(@RequestBody LoginRequestDTO body)  {
-        User user = this.userRepository.findByEmail(body.email()).orElseThrow(InvalidAccessException::new);
+        User user = this.userRepository.findByEmail(body.email())
+                .orElseThrow(InvalidAccessException::new);
 
         if(passwordEncoder.matches(body.password(), user.getPassword())) {
             String token = tokenService.generateToken(user);
 
-            return ResponseEntity.ok(new LoginResponseDTO(token, new UserDTO(user.getName(), user.getEmail())));
+            return ResponseEntity.ok(new LoginResponseDTO(
+                    "Login realizado com sucesso!",
+                    token,
+                    new UserDTO(user.getName(), user.getEmail())
+            ));
         }
         throw new InvalidAccessException();
     }
@@ -56,6 +61,10 @@ public class AuthController {
 
         String token = tokenService.generateToken(newUser);
 
-        return ResponseEntity.ok(new LoginResponseDTO(token, new UserDTO(newUser.getName(), newUser.getEmail())));
+        return ResponseEntity.ok(new LoginResponseDTO(
+                "Login realizado com sucesso!",
+                token,
+                new UserDTO(newUser.getName(), newUser.getEmail())
+        ));
     }
 }
