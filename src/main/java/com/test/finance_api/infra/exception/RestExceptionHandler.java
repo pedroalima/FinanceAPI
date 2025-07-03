@@ -1,9 +1,6 @@
 package com.test.finance_api.infra.exception;
 
-import com.test.finance_api.exceptions.EmailAlreadyExistsException;
-import com.test.finance_api.exceptions.EmailNotFoundException;
-import com.test.finance_api.exceptions.InvalidAccessException;
-import com.test.finance_api.exceptions.UserNotFoundException;
+import com.test.finance_api.exceptions.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -61,6 +58,13 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(UserNotFoundException.class)
     private ResponseEntity<RestErrorMessage> handlerUserNotFound(UserNotFoundException exception) {
+        RestErrorMessage errorMessage = new RestErrorMessage(HttpStatus.BAD_REQUEST, exception.getMessage());
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorMessage);
+    }
+
+    @ExceptionHandler(TransactionNotFoundException.class)
+    private ResponseEntity<RestErrorMessage> handlerTransactionNotFound(TransactionNotFoundException exception) {
         RestErrorMessage errorMessage = new RestErrorMessage(HttpStatus.BAD_REQUEST, exception.getMessage());
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorMessage);

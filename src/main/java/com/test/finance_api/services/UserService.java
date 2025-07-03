@@ -10,14 +10,14 @@ import java.util.List;
 
 @Service
 public class UserService {
-    private final UserRepository userRepository;
+    private final UserRepository _userRepository;
 
     public UserService(UserRepository userRepository) {
-        this.userRepository = userRepository;
+        this._userRepository = userRepository;
     }
 
     public ResponseEntity<GetAllUserResponse> getAllUsers() {
-        List<User> users = this.userRepository.findAll();
+        List<User> users = this._userRepository.findAll();
 
         return ResponseEntity.ok(new GetAllUserResponse("All users retrieved successfully", users));
     }

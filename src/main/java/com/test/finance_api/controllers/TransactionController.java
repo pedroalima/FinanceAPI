@@ -17,7 +17,9 @@ public class TransactionController {
     }
 
     @GetMapping("/all/user-id:{userId}")
-    public ResponseEntity<TransactionResponseDTO> getAllByUserId(@PathVariable(value = "userId") String userId) {
+    public ResponseEntity<TransactionResponseDTO> getAllByUserId(
+            @PathVariable(value = "userId") String userId
+    ) {
         return this._transactionService.getAllByUserId(userId);
     }
 
@@ -29,8 +31,20 @@ public class TransactionController {
         return this._transactionService.getById(userId, transactionId);
     }
 
-    @PostMapping("/create")
-    public ResponseEntity<TransactionResponseDTO> create(@RequestBody @Valid CreateTransactionRequestDTO body) {
-        return this._transactionService.create(body);
+    @PostMapping("/create/user-id:{userId}")
+    public ResponseEntity<TransactionResponseDTO> create(
+            @PathVariable(value = "userId") String userId,
+            @RequestBody @Valid CreateTransactionRequestDTO body
+    ) {
+        return this._transactionService.create(userId, body);
+    }
+
+    @PutMapping("/update/id:{transactionId}/user-id:{userId}")
+    public ResponseEntity<TransactionResponseDTO> update(
+            @PathVariable(value = "transactionId") String transactionId,
+            @PathVariable(value = "userId") String userId,
+            @RequestBody @Valid CreateTransactionRequestDTO body
+    ) {
+        return this._transactionService.update(userId, transactionId, body);
     }
 }

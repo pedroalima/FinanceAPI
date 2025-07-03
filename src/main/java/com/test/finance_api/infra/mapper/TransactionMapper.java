@@ -1,17 +1,18 @@
 package com.test.finance_api.infra.mapper;
 
-import com.test.finance_api.dto.transaction.TransactionDTO;
-import com.test.finance_api.dto.transaction.CreateTransactionRequestDTO;
-import com.test.finance_api.entity.Transaction;
+import java.util.List;
+
 import org.mapstruct.Mapper;
 
-import java.util.List;
+import com.test.finance_api.dto.transaction.CreateTransactionRequestDTO;
+import com.test.finance_api.dto.transaction.TransactionDTO;
+import com.test.finance_api.entity.Transaction;
 
 @Mapper(componentModel = "spring")
 public interface TransactionMapper {
-    Transaction transactionRequestDTOToTransaction(CreateTransactionRequestDTO createTransactionRequestDTO);
+    Transaction DTOToTransaction(CreateTransactionRequestDTO dto);
 
-    TransactionDTO transactionToTransactionDTO(Transaction transaction);
+    TransactionDTO transactionToDTO(Transaction transaction);
 
-    TransactionDTO[] transactionListToTransactionListDTO(List<Transaction> transactions);
+    TransactionDTO[] transactionListToDTO(List<Transaction> transactions);
 }
