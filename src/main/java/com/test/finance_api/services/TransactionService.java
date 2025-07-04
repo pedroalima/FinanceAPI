@@ -85,12 +85,10 @@ public class TransactionService {
 
         Transaction newTransaction = this._transactionMapper.DTOToTransaction(body);
 
-        newTransaction.setUserId(userId);
-
-        if (newTransaction.getDescription().isBlank() || newTransaction.getDescription() == null) {
-
+        if (newTransaction.getDescription() == null || newTransaction.getDescription().isBlank()) {
             newTransaction.setDescription("Sem descrição");
         }
+        newTransaction.setUserId(userId);
 
         this._transactionRepository.save(newTransaction);
 
