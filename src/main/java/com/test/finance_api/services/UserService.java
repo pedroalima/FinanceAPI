@@ -19,6 +19,10 @@ public class UserService {
     public ResponseEntity<GetAllUserResponse> getAllUsers() {
         List<User> users = this._userRepository.findAll();
 
-        return ResponseEntity.ok(new GetAllUserResponse("All users retrieved successfully", users));
+        if (users.isEmpty()) {
+            return ResponseEntity.ok(new GetAllUserResponse("Nenhum usuário encontrado", List.of()));
+        }
+
+        return ResponseEntity.ok(new GetAllUserResponse("Todas as transações recebidas com sucesso", users));
     }
 }
