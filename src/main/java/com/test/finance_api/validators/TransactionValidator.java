@@ -13,8 +13,13 @@ public class TransactionValidator {
         this._transactionRepository = transactionRepository;
     }
 
-    public Transaction verifyAndReturn(String transactionId) {
+    public Transaction assertById(String transactionId) {
         return this._transactionRepository.findById(transactionId)
                 .orElseThrow(() -> new TransactionNotFoundException("TransactionId: " + transactionId + " não encontrado"));
+    }
+
+    public void assertTransactionBelongsToUser(String userId, String transactionId, Transaction transaction) {
+        if (!transaction.getUserId().equals(userId))
+            throw new TransactionNotFoundException("TransactionId: " + transactionId + " não pertence ao usuário: " + userId);
     }
 }

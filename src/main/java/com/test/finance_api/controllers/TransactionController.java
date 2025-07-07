@@ -25,8 +25,8 @@ public class TransactionController {
 
     @GetMapping("/id:{transactionId}/user-id:{userId}")
     public ResponseEntity<TransactionResponseDTO> getById(
-            @PathVariable(value = "transactionId") String transactionId,
-            @PathVariable(value = "userId") String userId
+            @PathVariable(value = "userId") String userId,
+            @PathVariable(value = "transactionId") String transactionId
     ) {
         return this._transactionService.getById(userId, transactionId);
     }
@@ -41,10 +41,18 @@ public class TransactionController {
 
     @PutMapping("/update/id:{transactionId}/user-id:{userId}")
     public ResponseEntity<TransactionResponseDTO> update(
-            @PathVariable(value = "transactionId") String transactionId,
             @PathVariable(value = "userId") String userId,
+            @PathVariable(value = "transactionId") String transactionId,
             @RequestBody @Valid CreateTransactionRequestDTO body
     ) {
         return this._transactionService.update(userId, transactionId, body);
+    }
+
+    @DeleteMapping("/delete/id:{transactionId}/user-id:{userId}")
+    public ResponseEntity<TransactionResponseDTO> delete(
+            @PathVariable(value = "userId") String userId,
+            @PathVariable(value = "transactionId") String transactionId
+    ) {
+        return this._transactionService.delete(userId, transactionId);
     }
 }

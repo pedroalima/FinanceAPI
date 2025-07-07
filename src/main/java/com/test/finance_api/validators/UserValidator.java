@@ -1,5 +1,6 @@
 package com.test.finance_api.validators;
 
+import com.test.finance_api.entity.User;
 import com.test.finance_api.exceptions.UserNotFoundException;
 import com.test.finance_api.repositories.UserRepository;
 import org.springframework.stereotype.Component;
@@ -12,8 +13,8 @@ public class UserValidator {
         this._userRepository = userRepository;
     }
 
-    public void verify(String userId) {
-        this._userRepository.findById(userId)
+    public User assertByUserId(String userId) {
+        return this._userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("UserId: " + userId + " não encontrado"));
     }
 }

@@ -7,6 +7,7 @@ import com.test.finance_api.exceptions.TransactionNotFoundException;
 import com.test.finance_api.exceptions.UserNotFoundException;
 import com.test.finance_api.infra.mapper.TransactionMapper;
 import com.test.finance_api.repositories.TransactionRepository;
+import com.test.finance_api.validators.TransactionValidator;
 import com.test.finance_api.validators.UserValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,6 +21,7 @@ import org.springframework.http.ResponseEntity;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -33,6 +35,9 @@ class TransactionServiceTest {
 
     @Mock
     private UserValidator userValidator;
+
+    @Mock
+    private TransactionValidator transactionValidator;
 
     @Autowired
     @InjectMocks
@@ -51,7 +56,6 @@ class TransactionServiceTest {
         TransactionDTO[] emptyListDTO = new TransactionDTO[0];
 
         // Mocks
-        doNothing().when(this.userValidator).verify(userId);
         when(repository.findAllByUserId(userId)).thenReturn(emptyList);
         when(mapper.transactionListToDTO(emptyList)).thenReturn(emptyListDTO);
 
@@ -74,7 +78,6 @@ class TransactionServiceTest {
         TransactionDTO[] dtos = new TransactionDTO[]{dto};
 
         // Mocks
-        doNothing().when(this.userValidator).verify(transactions.getFirst().getUserId());
         when(this.repository.findAllByUserId(transactions.getFirst().getUserId())).thenReturn(transactions);
         when(this.mapper.transactionListToDTO(transactions)).thenReturn(dtos);
 
@@ -100,7 +103,7 @@ class TransactionServiceTest {
 
         // Execução e Verificação
         doThrow(new UserNotFoundException("UserId: " + userId + " não encontrado"))
-                .when(this.userValidator).verify(userId);
+                .when(this.userValidator).assertByUserId(userId);
 
         UserNotFoundException exception = assertThrows(
                 UserNotFoundException.class,
@@ -118,20 +121,23 @@ class TransactionServiceTest {
         TransactionDTO transactionDTO = this.createTransactionDTO();
 
         //Mocks
-        when(this.repository.findById(transaction.getId())).thenReturn(java.util.Optional.of(transaction));
+        when(this.repository.findById(transaction.getId())).thenReturn(Optional.of(transaction));
+        when(this.transactionValidator.assertById(transaction.getId())).thenReturn(transaction);
         when(this.mapper.transactionToDTO(transaction)).thenReturn(transactionDTO);
 
         // Execução
         ResponseEntity<TransactionResponseDTO> response = this.service.getById(transaction.getUserId(), transaction.getId());
 
         // Verificações
-        verify(this.userValidator).verify(transaction.getUserId());
         assertNotNull(response);
+        assertNotNull(response.getBody());
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        TransactionResponseDTO responseBody = response.getBody();
-        assertNotNull(responseBody);
-        assertEquals("Transação encontrada com sucesso!", responseBody.message());
-        assertEquals(transactionDTO, responseBody.transaction());
+        assertEquals("Transação encontrada com sucesso!", response.getBody().message());
+        assertEquals(transactionDTO, response.getBody().transaction());
+        verify(this.userValidator).assertByUserId(transaction.getUserId());
+        verify(this.transactionValidator).assertById(transaction.getId());
+        verify(this.mapper).transactionToDTO(transaction);
+        verifyNoMoreInteractions(this.userValidator, this.transactionValidator, this.mapper, this.repository);
     }
 
     @Test
@@ -143,6 +149,9 @@ class TransactionServiceTest {
         // Mocks
         when(this.repository.findById(transactionId)).thenReturn(java.util.Optional.empty());
 
+        doThrow(new TransactionNotFoundException("TransactionId: " + transactionId + " não encontrado"))
+                .when(transactionValidator).assertById(transactionId);
+
         // Execução e verificação
         TransactionNotFoundException exception = assertThrows(
                 TransactionNotFoundException.class,
@@ -151,7 +160,91 @@ class TransactionServiceTest {
 
         // Verificações
         assertTrue(exception.getMessage().contains("TransactionId: " + transactionId + " não encontrado"));
-        verify(this.userValidator).verify(userId);
+        verify(this.userValidator).assertByUserId(userId);
+    }
+
+    @Test
+    public void delete_TransactionNotFoundException() {
+        // Dados
+        String userId = "user123";
+        String transactionId = "txInexistente";
+
+        // Mocks
+        doThrow(new TransactionNotFoundException("TransactionId: " + transactionId + " não encontrado"))
+                .when(transactionValidator).assertById(transactionId);
+
+        // Execução e verificação
+        TransactionNotFoundException exception = assertThrows(
+                TransactionNotFoundException.class,
+                () -> this.service.delete(userId, transactionId)
+        );
+
+        // Verificações
+        assertTrue(exception.getMessage().contains("TransactionId: " + transactionId + " não encontrado"));
+        verify(this.userValidator).assertByUserId(userId);
+        verify(transactionValidator).assertById(transactionId);
+        verifyNoMoreInteractions(transactionValidator, repository, mapper);
+    }
+
+    @Test
+    public void delete_UserNotFoundException() {
+        // Dados
+        String userId = "userInexistente";
+        String transactionId = "tx123";
+
+        // Mocks
+        doThrow(new UserNotFoundException("UserId: " + userId + " não encontrado"))
+                .when(this.userValidator).assertByUserId(userId);
+
+        // Execução e verificação
+        UserNotFoundException exception = assertThrows(
+                UserNotFoundException.class,
+                () -> this.service.delete(userId, transactionId)
+        );
+
+        // Verificações
+        assertEquals("UserId: " + userId + " não encontrado", exception.getMessage());
+        verify(this.userValidator).assertByUserId(userId);
+        verifyNoMoreInteractions(transactionValidator, repository, mapper);
+    }
+
+    @Test
+    public void delete_TransactionDeleted() {
+        // Dados
+        String userId = "user123";
+        String transactionId = "tx123";
+
+        Transaction transaction = this.createTransaction();
+        transaction.setId(transactionId);
+        transaction.setUserId(userId);
+
+        TransactionDTO[] updatedDTO = new TransactionDTO[] {
+                this.createTransactionDTO()
+        };
+
+        List<Transaction> updatedList = List.of(new Transaction());
+
+        // Mocks
+        when(transactionValidator.assertById(transactionId)).thenReturn(transaction);
+        when(repository.findAllByUserId(userId)).thenReturn(updatedList);
+        when(mapper.transactionListToDTO(updatedList)).thenReturn(updatedDTO);
+
+        // Execução
+        ResponseEntity<TransactionResponseDTO> response = this.service.delete(userId, transactionId);
+
+        // Verificações
+        verify(this.userValidator).assertByUserId(userId);
+        verify(this.transactionValidator).assertTransactionBelongsToUser(userId, transactionId, transaction);
+        verify(this.repository).delete(transaction);
+        verify(this.repository).findAllByUserId(userId);
+        verify(this.mapper).transactionListToDTO(updatedList);
+        verify(this.transactionValidator).assertById(transactionId);
+        assertNotNull(response);
+        assertNotNull(response.getBody());
+        assertNull(response.getBody().transaction());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("Transação deletada com sucesso!", response.getBody().message());
+        assertArrayEquals(updatedDTO, response.getBody().transactions());
     }
 
     private Transaction createTransaction() {
