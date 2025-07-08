@@ -63,10 +63,10 @@ public class TransactionService {
             @PathVariable(value = "transactionId") String transactionId
     ) {
         this._userValidator.assertByUserId(userId);
+        Transaction existingTransaction = this._transactionValidator.assertById(transactionId);
+        this._transactionValidator.assertTransactionBelongsToUser(userId, transactionId, existingTransaction);
 
-        Transaction transaction = this._transactionValidator.assertById(transactionId);
-
-        TransactionDTO transactionDTO = this._mapper.transactionToDTO(transaction);
+        TransactionDTO transactionDTO = this._mapper.transactionToDTO(existingTransaction);
 
         return ResponseEntity.ok(new TransactionResponseDTO(
                 "Transação encontrada com sucesso!",
@@ -105,8 +105,8 @@ public class TransactionService {
             @RequestBody CreateTransactionRequestDTO body
     ) {
         this._userValidator.assertByUserId(userId);
-
         Transaction existingTransaction = this._transactionValidator.assertById(transactionId);
+        this._transactionValidator.assertTransactionBelongsToUser(userId, transactionId, existingTransaction);
 
         existingTransaction.setAmount(body.amount());
         existingTransaction.setDate(body.date());

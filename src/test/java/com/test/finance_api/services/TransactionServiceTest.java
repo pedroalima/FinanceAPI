@@ -122,8 +122,9 @@ class TransactionServiceTest {
         TransactionDTO transactionDTO = this.createTransactionDTO();
 
         //Mocks
-        when(this.repository.findById(transaction.getId())).thenReturn(Optional.of(transaction));
+        when(this.userValidator.assertByUserId(transaction.getUserId())).thenReturn(null);
         when(this.transactionValidator.assertById(transaction.getId())).thenReturn(transaction);
+        doNothing().when(this.transactionValidator).assertTransactionBelongsToUser(transaction.getUserId(), transaction.getId(), transaction);
         when(this.mapper.transactionToDTO(transaction)).thenReturn(transactionDTO);
 
         // Execução
@@ -137,6 +138,7 @@ class TransactionServiceTest {
         assertEquals(transactionDTO, response.getBody().transaction());
         verify(this.userValidator).assertByUserId(transaction.getUserId());
         verify(this.transactionValidator).assertById(transaction.getId());
+        verify(this.transactionValidator).assertTransactionBelongsToUser(transaction.getUserId(), transaction.getId(), transaction);
         verify(this.mapper).transactionToDTO(transaction);
         verifyNoMoreInteractions(this.userValidator, this.transactionValidator, this.mapper, this.repository);
     }
@@ -148,7 +150,8 @@ class TransactionServiceTest {
         String transactionId = "txInexistente";
 
         // Mocks
-        when(this.repository.findById(transactionId)).thenReturn(java.util.Optional.empty());
+        when(this.userValidator.assertByUserId(userId)).thenReturn(null);
+        when(this.repository.findById(transactionId)).thenReturn(Optional.empty());
 
         doThrow(new TransactionNotFoundException("TransactionId: " + transactionId + " não encontrado"))
                 .when(transactionValidator).assertById(transactionId);
@@ -162,6 +165,7 @@ class TransactionServiceTest {
         // Verificações
         assertTrue(exception.getMessage().contains("TransactionId: " + transactionId + " não encontrado"));
         verify(this.userValidator).assertByUserId(userId);
+        verify(transactionValidator).assertById(transactionId);
     }
 
     @Test
@@ -174,6 +178,7 @@ class TransactionServiceTest {
         transaction.setUserId("userInexistente");
 
         // Mocks
+
         when(transactionValidator.assertById(transactionId)).thenReturn(transaction);
         doThrow(new TransactionNotBelongsToUserException("TransactionId: " + transactionId + " não pertence ao usuário: " + userId))
                 .when(transactionValidator).assertTransactionBelongsToUser(userId, transactionId, transaction);
