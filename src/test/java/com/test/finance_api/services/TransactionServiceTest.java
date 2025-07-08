@@ -3,6 +3,7 @@ package com.test.finance_api.services;
 import com.test.finance_api.dto.transaction.TransactionDTO;
 import com.test.finance_api.dto.transaction.TransactionResponseDTO;
 import com.test.finance_api.entity.Transaction;
+import com.test.finance_api.exceptions.TransactionNotBelongsToUserException;
 import com.test.finance_api.exceptions.TransactionNotFoundException;
 import com.test.finance_api.exceptions.UserNotFoundException;
 import com.test.finance_api.infra.mapper.TransactionMapper;
@@ -164,6 +165,34 @@ class TransactionServiceTest {
     }
 
     @Test
+    public void delete_TransactionNotBelongsToUserException() {
+        // Dados
+        String userId = "user123";
+        String transactionId = "tx123";
+        Transaction transaction = this.createTransaction();
+        transaction.setId(transactionId);
+        transaction.setUserId("userInexistente");
+
+        // Mocks
+        when(transactionValidator.assertById(transactionId)).thenReturn(transaction);
+        doThrow(new TransactionNotBelongsToUserException("TransactionId: " + transactionId + " não pertence ao usuário: " + userId))
+                .when(transactionValidator).assertTransactionBelongsToUser(userId, transactionId, transaction);
+
+        // Execução e verificação
+        TransactionNotBelongsToUserException exception = assertThrows(
+                TransactionNotBelongsToUserException.class,
+                () -> this.service.delete(userId, transactionId)
+        );
+
+        // Verificações
+        assertTrue(exception.getMessage().contains("TransactionId: " + transactionId + " não pertence ao usuário: " + userId));
+        verify(this.userValidator).assertByUserId(userId);
+        verify(transactionValidator).assertById(transactionId);
+        verify(transactionValidator).assertTransactionBelongsToUser(userId, transactionId, transaction);
+        verifyNoMoreInteractions(transactionValidator, repository, mapper);
+    }
+
+    @Test
     public void delete_TransactionNotFoundException() {
         // Dados
         String userId = "user123";
@@ -213,19 +242,16 @@ class TransactionServiceTest {
         // Dados
         String userId = "user123";
         String transactionId = "tx123";
-
         Transaction transaction = this.createTransaction();
-        transaction.setId(transactionId);
-        transaction.setUserId(userId);
-
         TransactionDTO[] updatedDTO = new TransactionDTO[] {
                 this.createTransactionDTO()
         };
-
         List<Transaction> updatedList = List.of(new Transaction());
 
         // Mocks
+        when(userValidator.assertByUserId(userId)).thenReturn(null);
         when(transactionValidator.assertById(transactionId)).thenReturn(transaction);
+        doNothing().when(transactionValidator).assertTransactionBelongsToUser(userId, transactionId, transaction);
         when(repository.findAllByUserId(userId)).thenReturn(updatedList);
         when(mapper.transactionListToDTO(updatedList)).thenReturn(updatedDTO);
 
@@ -234,11 +260,10 @@ class TransactionServiceTest {
 
         // Verificações
         verify(this.userValidator).assertByUserId(userId);
+        verify(this.transactionValidator).assertById(transactionId);
         verify(this.transactionValidator).assertTransactionBelongsToUser(userId, transactionId, transaction);
-        verify(this.repository).delete(transaction);
         verify(this.repository).findAllByUserId(userId);
         verify(this.mapper).transactionListToDTO(updatedList);
-        verify(this.transactionValidator).assertById(transactionId);
         assertNotNull(response);
         assertNotNull(response.getBody());
         assertNull(response.getBody().transaction());

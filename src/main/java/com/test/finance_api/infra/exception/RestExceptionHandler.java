@@ -69,4 +69,11 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorMessage);
     }
+
+    @ExceptionHandler(TransactionNotBelongsToUserException.class)
+    private ResponseEntity<RestErrorMessage> handlerTransactionNotBelongsToUser(TransactionNotBelongsToUserException exception) {
+        RestErrorMessage errorMessage = new RestErrorMessage(HttpStatus.BAD_REQUEST, exception.getMessage());
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorMessage);
+    }
 }

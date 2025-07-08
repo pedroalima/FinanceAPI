@@ -133,9 +133,7 @@ public class TransactionService {
             @PathVariable(value = "transactionId") String transactionId
     ) {
         this._userValidator.assertByUserId(userId);
-
         Transaction existingTransaction = this._transactionValidator.assertById(transactionId);
-
         this._transactionValidator.assertTransactionBelongsToUser(userId, transactionId, existingTransaction);
 
         this._repository.delete(existingTransaction);
